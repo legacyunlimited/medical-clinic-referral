@@ -3,14 +3,31 @@ const { getFirestore } = require('firebase-admin/firestore');
 const { initialize, loggers, constants } = require('@asymmetrik/node-fhir-server-core');
 const { onRequest } = require('firebase-functions/v2/https');
 
-
 // Add middleware to authenticate requests
 const { VERSIONS } = constants;
 
 initializeApp();
 
+// Import and load environment variables
+require('dotenv').config();
+
 const db = getFirestore();
 // const functions = require('firebase-functions');
+
+// Import patientService after Firebase initialization
+const patientService = require('./patient.service.js');
+
+// The service account key file path can now be accessed as follows:
+const serviceAccountKeyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
+var admin = require('firebase-admin');
+var serviceAccount = require(serviceAccountKeyPath);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  // Other Firebase configuration options
+});
+
 
 // Initialize the FHIR server
 const fhirServer = initialize({
