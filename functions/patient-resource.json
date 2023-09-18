@@ -1,6 +1,6 @@
 
 {
-  "resourceType": "Patient",
+  "resourceType": "patient",
   "name": [
     {
       "given": ["John"],

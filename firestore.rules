@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to patient profiles for authenticated patients
+    match /patients/{patientId} {
+      allow read, write: if request.auth != null && request.auth.uid == patientId;
+    }
+
+    // Allow read access to clinic data for authenticated clinic staff
+    match /clinics/{clinicId} {
+      allow read: if request.auth != null && get(/databases/$(database)/documents/clinics/$(request.auth.uid)).data.role == 'clinic_staff';
+    }
+
+    // Define more rules for other collections and documents as needed
+
+    // Default rule (deny access)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
