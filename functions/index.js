@@ -3,21 +3,26 @@ const { getFirestore } = require('firebase-admin/firestore');
 const { initialize, loggers, constants } = require('@asymmetrik/node-fhir-server-core');
 const { onRequest } = require('firebase-functions/v2/https');
 
-
 // Add middleware to authenticate requests
 const { VERSIONS } = constants;
 
 initializeApp();
 
-const db = getFirestore();
-// const functions = require('firebase-functions');
+// Import and load environment variables
+require('dotenv').config();
+
+
+// Import patientService after Firebase initialization
+const patientService = require('./patient.service.js');
+
 
 // Initialize the FHIR server
 const fhirServer = initialize({
   profiles: {
-    patient: {
+    Patient: {
       service: './patient.service.js',
       versions: [VERSIONS['4_0_0']],
+      /* metadata: './patient.metadata.js' */
     },
     encounter: {
       service: './encounter.service.js',
@@ -34,15 +39,18 @@ exports.createPatient = onRequest(async (req, res) => {
   try {
     const patientData = req.body; // Assuming patient data is sent in the request body
 
-    // Use the FHIR server to create a Patient resource
-    const createdPatient = await fhirServer.create({ resourceType: 'Patient', resource: patientData });
+ // Use the FHIR server's create function with the provided args
+ const createdPatient = await patientService.create({
+  base_version: '4_0_0', // Replace with your desired FHIR version
+  resource: patientData,
+});
 
-    res.status(201).json(createdPatient);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Error creating Patient resource.');
-  }
-  });
+res.status(201).json(createdPatient);
+} catch (error) {
+console.error(error);
+res.status(500).send('Error creating Patient resource.');
+}
+});
 
 
   exports.getPatient = onRequest(async (req, res) => {
@@ -172,8 +180,3 @@ exports.performReferral = onRequest(async (req, res) => {
     res.status(500).send('Error performing referral.');
   }
 });
-
-
-
-  
-  
